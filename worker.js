@@ -5,30 +5,29 @@ addEventListener('fetch', event => {
 async function handleRequest(request) {
   const url = new URL(request.url);
   
-  // Handle API requests
+  // Handle API tracking
   if (url.pathname === '/track') {
     return handleTrackRequest(request);
   }
   
-  // Handle root path
-  if (url.pathname === '/') {
-    return serveAsset('index.html');
-  }
-  
-  // Handle other assets
-  const assetPath = url.pathname.substring(1);
-  if (['index.html', 'style.css'].includes(assetPath)) {
-    return serveAsset(assetPath);
-  }
-  
-  // Handle resi sharing
+  // Handle resi sharing redirect
   if (url.pathname.startsWith('/resi/')) {
     const pathParts = url.pathname.split('/');
     if (pathParts.length === 4) {
       const waybillNo = pathParts[2];
       const pin = pathParts[3];
-      return Response.redirect(`/?resi=${waybillNo}&pin=${pin}`, 302);
+      return Response.redirect(`${new URL(request.url).origin}/?resi=${waybillNo}&pin=${pin}`, 301);
     }
+  }
+  
+  // Serve root path with index.html
+  if (url.pathname === '/' || url.pathname === '/index.html') {
+    return serveAsset('index.html');
+  }
+  
+  // Serve CSS
+  if (url.pathname === '/style.css') {
+    return serveAsset('style.css');
   }
   
   return new Response('Not found', { status: 404 });
