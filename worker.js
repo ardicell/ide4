@@ -5,36 +5,47 @@ addEventListener('fetch', event => {
 async function handleRequest(request) {
   const url = new URL(request.url);
   
-  // Tangani permintaan API tracking
+  // Handle API requests
   if (url.pathname === '/track') {
     return handleTrackRequest(request);
   }
   
-  // Tangani permintaan aset statis
-  return serveAsset(request);
-}
-
-async function serveAsset(request) {
-  const url = new URL(request.url);
-  let assetPath = url.pathname === '/' ? 'index.html' : url.pathname.substring(1);
-  
-  // Hanya izinkan file yang diketahui
-  const allowedAssets = ['index.html', 'style.css'];
-  if (!allowedAssets.includes(assetPath)) {
-    return new Response('Not found', { status: 404 });
+  // Handle root path
+  if (url.pathname === '/') {
+    return serveAsset('index.html');
   }
   
-  // Dapatkan aset dari lingkungan
-  const asset = await __STATIC_CONTENT.get(assetPath);
+  // Handle other assets
+  const assetPath = url.pathname.substring(1);
+  if (['index.html', 'style.css'].includes(assetPath)) {
+    return serveAsset(assetPath);
+  }
+  
+  // Handle resi sharing
+  if (url.pathname.startsWith('/resi/')) {
+    const pathParts = url.pathname.split('/');
+    if (pathParts.length === 4) {
+      const waybillNo = pathParts[2];
+      const pin = pathParts[3];
+      return Response.redirect(`/?resi=${waybillNo}&pin=${pin}`, 302);
+    }
+  }
+  
+  return new Response('Not found', { status: 404 });
+}
+
+async function serveAsset(assetName) {
+  // Get the asset from KV
+  const asset = await __STATIC_CONTENT.get(assetName);
   
   if (!asset) {
     return new Response('Asset not found', { status: 404 });
   }
   
-  // Tentukan content type
+  // Determine content type
   let contentType = 'text/plain';
-  if (assetPath.endsWith('.html')) contentType = 'text/html';
-  if (assetPath.endsWith('.css')) contentType = 'text/css';
+  if (assetName.endsWith('.html')) contentType = 'text/html';
+  if (assetName.endsWith('.css')) contentType = 'text/css';
   
   return new Response(asset, {
     headers: { 
