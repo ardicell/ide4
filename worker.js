@@ -5,43 +5,42 @@ addEventListener('fetch', event => {
 async function handleRequest(request) {
   const url = new URL(request.url);
   
-  // Serve root path with index.html
-  if (url.pathname === '/') {
-    return serveAsset('index.html');
-  }
-  
-  // Serve other assets
-  const assetPath = url.pathname.substring(1);
-  if (assetPath === 'style.css' || assetPath === 'index.html') {
-    return serveAsset(assetPath);
-  }
-  
-  // Handle tracking requests
+  // Tangani permintaan API tracking
   if (url.pathname === '/track') {
     return handleTrackRequest(request);
   }
   
-  return new Response('Not found', { status: 404 });
+  // Tangani permintaan aset statis
+  return serveAsset(request);
 }
 
-async function serveAsset(assetName) {
-  // Get the asset from the global ASSETS environment variable
-  const asset = await ASSETS.get(assetName);
+async function serveAsset(request) {
+  const url = new URL(request.url);
+  let assetPath = url.pathname === '/' ? 'index.html' : url.pathname.substring(1);
+  
+  // Hanya izinkan file yang diketahui
+  const allowedAssets = ['index.html', 'style.css'];
+  if (!allowedAssets.includes(assetPath)) {
+    return new Response('Not found', { status: 404 });
+  }
+  
+  // Dapatkan aset dari lingkungan
+  const asset = await __STATIC_CONTENT.get(assetPath);
   
   if (!asset) {
     return new Response('Asset not found', { status: 404 });
   }
   
-  // Determine content type
+  // Tentukan content type
   let contentType = 'text/plain';
-  if (assetName.endsWith('.html')) {
-    contentType = 'text/html';
-  } else if (assetName.endsWith('.css')) {
-    contentType = 'text/css';
-  }
+  if (assetPath.endsWith('.html')) contentType = 'text/html';
+  if (assetPath.endsWith('.css')) contentType = 'text/css';
   
   return new Response(asset, {
-    headers: { 'Content-Type': contentType },
+    headers: { 
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=3600'
+    }
   });
 }
 
