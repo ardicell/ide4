@@ -1,0 +1,251 @@
+:root {
+    --primary: #2c3e50;
+    --secondary: #3498db;
+    --success: #27ae60;
+    --danger: #e74c3c;
+    --light: #ecf0f1;
+    --dark: #2c3e50;
+    --gray: #95a5a6;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+h1 {
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--secondary);
+}
+
+.form-container {
+    background: var(--light);
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: var(--secondary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+button {
+    background: var(--secondary);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    width: 100%;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #2980b9;
+}
+
+.hidden {
+    display: none;
+}
+
+.error-message {
+    background: #ffecec;
+    color: var(--danger);
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 20px;
+    border-left: 4px solid var(--danger);
+}
+
+.summary, .timeline {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.summary h2, .timeline h2 {
+    color: var(--primary);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.summary-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.status {
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.status.delivered {
+    background: #e8f5e9;
+    color: var(--success);
+}
+
+.status.success {
+    background: #e3f2fd;
+    color: var(--secondary);
+}
+
+.timeline-item {
+    display: flex;
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-point {
+    width: 20px;
+    height: 20px;
+    background: var(--secondary);
+    border-radius: 50%;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    margin-right: 15px;
+    margin-top: 5px;
+}
+
+.timeline-item::after {
+    content: '';
+    position: absolute;
+    top: 25px;
+    left: 10px;
+    height: calc(100% - 20px);
+    width: 2px;
+    background: var(--secondary);
+    z-index: 0;
+}
+
+.timeline-item:last-child::after {
+    display: none;
+}
+
+.timeline-content {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    flex-grow: 1;
+    border-left: 3px solid var(--secondary);
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.timeline-time {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.timeline-status {
+    background: #e3f2fd;
+    color: var(--secondary);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.timeline-detail > div {
+    margin-bottom: 8px;
+}
+
+.photo-link a {
+    color: var(--secondary);
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-block;
+    padding: 5px 10px;
+    background: #e3f2fd;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.photo-link a:hover {
+    background: var(--secondary);
+    color: white;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .form-container, .summary, .timeline {
+        padding: 15px;
+    }
+    
+    .timeline-header {
+        flex-direction: column;
+    }
+    
+    .timeline-status {
+        margin-top: 5px;
+    }
+}

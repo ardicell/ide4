@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lacak Resi ID Express</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🛺 Lacak Resi ID Express</h1>
+        
+        <div class="form-container">
+            <form id="trackingForm">
+                <div class="input-group">
+                    <label for="waybillNo">Nomor Resi:</label>
+                    <input type="text" id="waybillNo" placeholder="Contoh: IDE7001018306468" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="pin">PIN Resi:</label>
+                    <input type="text" id="pin" placeholder="Contoh: 2622" required>
+                </div>
+                
+                <button type="submit">Lacak Pengiriman</button>
+            </form>
+        </div>
+        
+        <div id="result" class="hidden">
+            <div class="summary">
+                <h2>Informasi Pengiriman</h2>
+                <div id="summaryContent"></div>
+            </div>
+            
+            <div class="timeline">
+                <h2>Riwayat Pengiriman</h2>
+                <div id="timelineContent"></div>
+            </div>
+        </div>
+        
+        <div id="error" class="hidden error-message"></div>
+    </div>
+
+    <script>
+        document.getElementById('trackingForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const waybillNo = document.getElementById('waybillNo').value.trim();
+            const pin = document.getElementById('pin').value.trim();
+            
+            if (!waybillNo || !pin) {
+                showError('Harap masukkan nomor resi dan PIN');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/track?noResi=${waybillNo}&pin=${pin}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.code !== 0 || !data.data || data.data.length === 0) {
+                    showError('Data pengiriman tidak ditemukan');
+                    return;
+                }
+                
+                displayResults(data.data[0]);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Gagal mengambil data. Silakan coba lagi.');
+            }
+        });
+        
+        function displayResults(shipment) {
+            const summaryContent = document.getElementById('summaryContent');
+            summaryContent.innerHTML = `
+                <div class="summary-item">
+                    <strong>No. Resi:</strong> ${shipment.waybillNo}
+                </div>
+                <div class="summary-item">
+                    <strong>Tanggal Kirim:</strong> ${formatDate(shipment.shippingTime)}
+                </div>
+                <div class="summary-item">
+                    <strong>Pengirim:</strong> ${shipment.senderName} (${shipment.senderCityName})
+                </div>
+                <div class="summary-item">
+                    <strong>Penerima:</strong> ${shipment.recipientName} (${shipment.recipientCityName})
+                </div>
+                <div class="summary-item status ${getStatusClass(shipment.waybillStatus)}">
+                    <strong>Status:</strong> ${getStatusText(shipment.waybillStatus)}
+                </div>
+            `;
+            
+            const timelineContent = document.getElementById('timelineContent');
+            timelineContent.innerHTML = '';
+            
+            shipment.scanLineVOS.forEach(scan => {
+                const scanElement = document.createElement('div');
+                scanElement.className = 'timeline-item';
+                
+                scanElement.innerHTML = `
+                    <div class="timeline-point"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <span class="timeline-time">${formatTime(scan.operationTime)}</span>
+                            <span class="timeline-status">${getOperationText(scan.operationType)}</span>
+                        </div>
+                        <div class="timeline-detail">
+                            <div><strong>Lokasi:</strong> ${scan.operationBranchName}</div>
+                            ${scan.courierName ? `<div><strong>Kurir:</strong> ${scan.courierName}</div>` : ''}
+                            ${scan.driverName ? `<div><strong>Sopir:</strong> ${scan.driverName}</div>` : ''}
+                            ${scan.photoUrl ? `<div class="photo-link"><a href="${scan.photoUrl}" target="_blank">📸 Lihat Foto Bukti</a></div>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                timelineContent.appendChild(scanElement);
+            });
+            
+            document.getElementById('result').classList.remove('hidden');
+            document.getElementById('error').classList.add('hidden');
+        }
+        
+        function showError(message) {
+            const errorElement = document.getElementById('error');
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+            document.getElementById('result').classList.add('hidden');
+        }
+        
+        function formatDate(dateTime) {
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            return new Date(dateTime).toLocaleDateString('id-ID', options);
+        }
+        
+        function formatTime(dateTime) {
+            const options = { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                day: '2-digit',
+                month: 'short'
+            };
+            return new Date(dateTime).toLocaleTimeString('id-ID', options);
+        }
+        
+        function getStatusText(status) {
+            const statusMap = {
+                '00': 'Manifest',
+                '01': 'Dalam Perjalanan',
+                '02': 'Tiba di Cabang',
+                '03': 'Terkirim',
+                '09': 'Pengiriman Sukses'
+            };
+            return statusMap[status] || `Status: ${status}`;
+        }
+        
+        function getStatusClass(status) {
+            if (status === '03') return 'delivered';
+            if (status === '09') return 'success';
+            return '';
+        }
+        
+        function getOperationText(operationType) {
+            const operationMap = {
+                '00': 'Pengiriman Diterima',
+                '04': 'Pengiriman Berangkat',
+                '05': 'Pengiriman Tiba',
+                '09': 'Pengiriman Sukses',
+                '67': 'Pengiriman Diproses'
+            };
+            return operationMap[operationType] || `Operasi: ${operationType}`;
+        }
+    </script>
+</body>
+</html>
