@@ -1,47 +1,48 @@
 addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event))
+  event.respondWith(handleRequest(event.request))
 })
 
-async function handleRequest(event) {
-  const url = new URL(event.request.url);
+async function handleRequest(request) {
+  const url = new URL(request.url);
   
-  // Tangani permintaan aset statis
-  if (url.pathname === '/' || url.pathname === '/index.html') {
-    return serveAsset('index.html', event);
+  // Serve root path with index.html
+  if (url.pathname === '/') {
+    return serveAsset('index.html');
   }
   
-  if (url.pathname === '/style.css') {
-    return serveAsset('style.css', event);
+  // Serve other assets
+  const assetPath = url.pathname.substring(1);
+  if (assetPath === 'style.css' || assetPath === 'index.html') {
+    return serveAsset(assetPath);
   }
   
-  // Tangani permintaan tracking
+  // Handle tracking requests
   if (url.pathname === '/track') {
-    return handleTrackRequest(event.request);
+    return handleTrackRequest(request);
   }
   
   return new Response('Not found', { status: 404 });
 }
 
-async function serveAsset(assetName, event) {
-  try {
-    // Dapatkan aset dari sistem file
-    const asset = await __STATIC_CONTENT.get(assetName);
-    
-    if (!asset) {
-      return new Response('Asset not found', { status: 404 });
-    }
-    
-    // Tentukan content type
-    const contentType = assetName.endsWith('.css') 
-      ? 'text/css' 
-      : 'text/html';
-    
-    return new Response(asset, {
-      headers: { 'Content-Type': contentType },
-    });
-  } catch (err) {
-    return new Response('Error loading asset', { status: 500 });
+async function serveAsset(assetName) {
+  // Get the asset from the global ASSETS environment variable
+  const asset = await ASSETS.get(assetName);
+  
+  if (!asset) {
+    return new Response('Asset not found', { status: 404 });
   }
+  
+  // Determine content type
+  let contentType = 'text/plain';
+  if (assetName.endsWith('.html')) {
+    contentType = 'text/html';
+  } else if (assetName.endsWith('.css')) {
+    contentType = 'text/css';
+  }
+  
+  return new Response(asset, {
+    headers: { 'Content-Type': contentType },
+  });
 }
 
 async function handleTrackRequest(request) {

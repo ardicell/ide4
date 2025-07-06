@@ -1,3 +1,6 @@
 name = "idex-tracker"
 compatibility_date = "2025-07-06"
-assets = "./dist"
+
+[site]
+bucket = "./dist"
+entry-point = "."
